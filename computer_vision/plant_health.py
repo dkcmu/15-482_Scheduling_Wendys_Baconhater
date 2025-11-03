@@ -1,5 +1,5 @@
-from classify import FoliageClassifier
-from measure import MeasureHeight
+from computer_vision.classify import FoliageClassifier
+from computer_vision.measure import MeasureHeight
 
 # Given an image, return three values:
 # 1. An image with all non-foliage parts masked out

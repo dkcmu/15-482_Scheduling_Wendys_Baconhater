@@ -1,7 +1,7 @@
-
 import cv2, numpy as np
-from cv_utils import *
-from filterColor import *
+from computer_vision.cv_utils import *
+from computer_vision.filterColor import *
+
 class MeasureHeight:
     def __init__(self, ref_image, stick_mask):
         self.ref_image = ref_image

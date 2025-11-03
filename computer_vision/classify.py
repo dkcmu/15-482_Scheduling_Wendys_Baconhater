@@ -1,6 +1,6 @@
 import cv2, numpy as np
-from cv_utils import *
-from cv_learn import *
+from computer_vision.cv_utils import *
+from computer_vision.cv_learn import *
 
 # Detect the plants in the image using a classifier model (of type MLearn).
 # If modelfilename is None, create a model, o/w load it in

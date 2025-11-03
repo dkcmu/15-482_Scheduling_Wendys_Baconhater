@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
 import cv2, sys
-from cv_utils import *
+from computer_vision.cv_utils import *
 import argparse
 
 wait_time = 100

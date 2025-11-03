@@ -1,7 +1,7 @@
-import classify, color_correct, measure
+from computer_vision import classify, color_correct, measure
 import numpy as np
 import cv2
-from cv_utils import *
+from computer_vision.cv_utils import *
 
 # Given an image, an instance of classify.FoliageClassifier, and
 #    an instance of mesure.MeasureHeight and returns three values:

@@ -1,6 +1,6 @@
 import cv2, numpy as np
-from cv_utils import *
-from cv_learn import *
+from computer_vision.cv_utils import *
+from computer_vision.cv_learn import *
 import torch
 import torchvision.transforms.v2 as T
 import onnxruntime as ort

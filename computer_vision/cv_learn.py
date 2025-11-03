@@ -1,5 +1,5 @@
 import numpy as np, pickle as pkl
-from cv_utils import *
+from computer_vision.cv_utils import *
 from sklearn.model_selection import cross_val_score
 
 def loadPickleModel(modelfilename):
