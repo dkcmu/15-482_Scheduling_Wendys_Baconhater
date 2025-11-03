@@ -12,6 +12,7 @@ class LightMonitor(Monitor):
         self.reset()
 
     def reset(self):
+        self.prev_day_insolation = self.insolation
         self.insolation = 0
 
     def setTarget(self, target):
