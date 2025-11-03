@@ -61,9 +61,13 @@ class GreenhouseScheduler:
     # CREATE and add constraints for the minimum duration each behavior
     #     should be run (see self.behaviors_info)
     def createDurationConstraints(self, model):
+        from math import ceil
         for behavior in self.behaviors_info:
             duration = self.behaviors_info[behavior].min_extent # in minutes
             # BEGIN STUDENT CODE
+            required_chunks = duration // self.minutes_per_chunk
+            curr_chunks = sum(self.all_jobs[behavior, t] for t in range(self.horizon))
+            model.Add(curr_chunks >= required_chunks)
             # END STUDENT CODE
             pass
 
@@ -84,8 +88,71 @@ class GreenhouseScheduler:
     #      Lights: lights on
     #      TakeImage: lights on
     def createMutualExclusiveConstraints(self,model):
+        from itertools import product
         for time in range(self.horizon):
             # BEGIN STUDENT CODE
+            mutexes_simple = [
+                ('LowerTemp', 'RaiseTemp'),
+                ('LowerMoist', 'RaiseMoist'),
+                ('RaiseMoist', 'LowerHumid')
+            ]
+
+            actuators = {
+                            #  Fan,   Light, Wpump
+                "LowerTemp":  (True,  False, None),
+                "RaiseTemp":  (False, True,  None),
+                "LowerHumid": (True,  None,  False),
+                "LowerMoist": (True,  None,  False),
+                "RaiseMoist": (False, None,  True),
+                "Light":      (None,  True,  None),
+                "TakeImage":  (None,  True,  None)
+            }
+
+            fan_on = []
+            fan_off = []
+            light_on = []
+            light_off = []
+            wpump_on = []
+            wpump_off = []
+
+            for behavior in actuators:
+                fan, light, wpump = actuators[behavior]
+    
+                if fan == True:
+                    fan_on.append(behavior)
+                elif fan == False:
+                    fan_off.append(behavior)
+    
+                if light == True:
+                    light_on.append(behavior)
+                elif light == False:
+                    light_off.append(behavior)
+    
+                if wpump == True:
+                    wpump_on.append(behavior)
+                elif wpump == False:
+                    wpump_off.append(behavior)
+
+            mutex_candidates = []
+            mutex_candidates.extend(product(fan_on, fan_off))
+            mutex_candidates.extend(product(light_on, light_off))
+            mutex_candidates.extend(product(wpump_on, wpump_off))
+            mutex_candidates.extend(product(fan_on, fan_on))
+            mutex_candidates.extend(product(light_on, light_on))
+            mutex_candidates.extend(product(wpump_on, wpump_on))
+            mutex_candidates += mutexes_simple
+
+            filtered_mutex_candidates = []
+            for mutex_candidate in mutex_candidates:
+                local_l = [mutex_candidate[0], mutex_candidate[1]]
+                if len(set(local_l)) > 1:
+                    filtered_mutex_candidates.append(tuple(sorted(local_l)))
+
+            filtered_mutex_candidates = set(filtered_mutex_candidates)
+
+            for behavior1, behavior2 in filtered_mutex_candidates:
+                if behavior1 in self.behaviors_info and behavior2 in self.behaviors_info:
+                    model.Add(self.all_jobs[behavior1, time] + self.all_jobs[behavior2, time] <= 1)
             # END STUDENT CODE
             pass
 
@@ -95,6 +162,9 @@ class GreenhouseScheduler:
         for behavior in self.behaviors_info:
             max_night = self.behaviors_info[behavior].night_extent # in minutes
             # BEGIN STUDENT CODE
+            m = self.minutes_per_chunk
+            model.Add(sum(self.all_jobs[behavior, t] for t in range(self.horizon)
+                        if (h:=((t*m)//60)%24) < 8 or h >= 20) <= max_night//m)
             # END STUDENT CODE
             pass
 
@@ -111,6 +181,24 @@ class GreenhouseScheduler:
             min_spacing = self.behaviors_info[behavior].min_spacing
             max_spacing = self.behaviors_info[behavior].max_spacing
             # BEGIN STUDENT CODE
+            min_b = min_spacing // chunk
+            max_b = max_spacing // chunk
+
+            night = (self.behaviors_info[behavior].night_extent > 0)
+
+            start = 0 if night else (8 * 60) // chunk
+            end = self.horizon if night else (20 * 60) // chunk
+
+            if start >= end:
+                continue
+            
+            window = min_b + 1
+            for s in range(start, end - window + 1):
+                model.Add(sum(self.all_jobs[behavior, t] for t in range(s, s + window)) <= 1)
+            
+            if max_b > 0:
+                for s in range(start, end - max_b + 1):
+                    model.Add(sum(self.all_jobs[behavior, t] for t in range(s, s + max_b)) >= 1)
             # END STUDENT CODE
 
     # Solve model.
