@@ -61,7 +61,6 @@ class GreenhouseScheduler:
     # CREATE and add constraints for the minimum duration each behavior
     #     should be run (see self.behaviors_info)
     def createDurationConstraints(self, model):
-        from math import ceil
         for behavior in self.behaviors_info:
             duration = self.behaviors_info[behavior].min_extent # in minutes
             # BEGIN STUDENT CODE
@@ -188,17 +187,13 @@ class GreenhouseScheduler:
 
             start = 0 if night else (8 * 60) // chunk
             end = self.horizon if night else (20 * 60) // chunk
-
-            if start >= end:
-                continue
             
-            window = min_b + 1
-            for s in range(start, end - window + 1):
-                model.Add(sum(self.all_jobs[behavior, t] for t in range(s, s + window)) <= 1)
+            window_len = min_b + 1
+            for left in range(start, end - window_len + 1):
+                model.Add(sum(self.all_jobs[behavior, t] for t in range(left, left + window_len)) <= 1)
             
-            if max_b > 0:
-                for s in range(start, end - max_b + 1):
-                    model.Add(sum(self.all_jobs[behavior, t] for t in range(s, s + max_b)) >= 1)
+            for left in range(start, end - max_b + 1):
+                model.Add(sum(self.all_jobs[behavior, t] for t in range(left, left + max_b)) >= 1)
             # END STUDENT CODE
 
     # Solve model.
