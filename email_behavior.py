@@ -17,11 +17,6 @@ class Email(Greenhouse_Behavior):
         self._sent_email = False
         self.receiver_emails = [
             "chrissu@andrew.cmu.edu",
-            "dkouatch@andrew.cmu.edu",
-            "mliang4@andrew.cmu.edu",
-            "rsimmons@andrew.cmu.edu",
-            "shashwa3@andrew.cmu.edu",
-            "abhinanv@andrew.cmu.edu"
         ]
 
         self.fsm = Machine(self, states=self.states, initial=self.initial,
@@ -37,18 +32,18 @@ class Email(Greenhouse_Behavior):
         sensors = self.sensors
         sensor_data = f"""
         <b>Sensor Data</b>\n
-        <p>Light Level:       {sensors.light_level}</p>
-        <p>Temperature:       {sensors.temperature}</p>
-        <p>Humidity:          {sensors.humidity}</p>
-        <p>Weight:            {sensors.weight}</p>
-        <p>Moisture:          {sensors.moisture}</p>
-        <p>Water Level:       {sensors.wlevel}</p>
-        <p>Light Level (raw): {sensors.light_level_raw[0]},{sensors.light_level_raw[1]}</p>
-        <p>Temperature (raw): {sensors.temperature_raw[0]},{sensors.temperature_raw[1]}</p>
-        <p>Humidity (raw):    {sensors.humidity_raw[0]},{sensors.humidity_raw[1]}</p>
-        <p>Weight (raw):      {sensors.weight_raw[0]},{sensors.weight_raw[1]}</p>
-        <p>Moisture (raw):    {sensors.moisture_raw[0]},{sensors.moisture_raw[1]}</p>
-        <p>Water Level (raw): {sensors.wlevel_raw}</p>
+        <p>Light Level:       {float(sensors.light_level):.2f}</p>
+        <p>Temperature:       {float(sensors.temperature):.2f}</p>
+        <p>Humidity:          {float(sensors.humidity):.2f}</p>
+        <p>Weight:            {float(sensors.weight):.2f}</p>
+        <p>Moisture:          {float(sensors.moisture):.2f}</p>
+        <p>Water Level:       {float(sensors.wlevel):.2f}</p>
+        <p>Light Level (raw): {float(sensors.light_level_raw[0]):.2f},{float(sensors.light_level_raw[1]):.2f}</p>
+        <p>Temperature (raw): {float(sensors.temperature_raw[0]):.2f},{float(sensors.temperature_raw[1]):.2f}</p>
+        <p>Humidity (raw):    {float(sensors.humidity_raw[0]):.2f},{float(sensors.humidity_raw[1]):.2f}</p>
+        <p>Weight (raw):      {float(sensors.weight_raw[0]):.2f},{float(sensors.weight_raw[1]):.2f}</p>
+        <p>Moisture (raw):    {float(sensors.moisture_raw[0]):.2f},{float(sensors.moisture_raw[1]):.2f}</p>
+        <p>Water Level (raw): {float(sensors.wlevel_raw):.2f}</p>
         """
         return sensor_data
     
@@ -70,9 +65,7 @@ class Email(Greenhouse_Behavior):
         IMAGE_DIRECTORY = "/home/robotanist/User/images"
 
         TEAM_NAME = "Team Wendy's Baconhater"
-        timestamp = datetime.datetime.fromtimestamp(
-            self.sensordata['unix_time']
-        ).strftime("%d/%m/%Y %H:%M:%S")
+        timestamp = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
         subject = f"{TEAM_NAME} TerraBot 7 Daily Mail"
         images = []
@@ -91,7 +84,7 @@ class Email(Greenhouse_Behavior):
                 <p>{self.parse_sensor_data()}</p>
                 <p>{self.parse_actuator_state()}</p>
                 <p>Most recent image:</p>
-                <p><img src="cid:image1" /></p>
+                <p><img src="cid:image1" style="width:25%;height:auto;" /></p>
                 """
             else:
                 body = f"""
