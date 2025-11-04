@@ -112,8 +112,8 @@ class LayeredGreenhouseAgent(GreenhouseAgent):
             self.sensors,
             self.actuators.actuator_state,
             [light_monitor.LightMonitor(),
-             logging_monitor.LoggingMonitor()]),
-             # schedule_monitor.ScheduleMonitor()])
+             logging_monitor.LoggingMonitor(),
+             schedule_monitor.ScheduleMonitor()])
         # END STUDENT CODE
 
     def setBehavioralLayer(self, behavioral):
