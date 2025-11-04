@@ -1,6 +1,6 @@
 from monitor import *
 from terrabot_utils import clock_time, time_since_midnight
-from greenhouse_scheduler_ref import BehaviorInfo, GreenhouseScheduler
+from greenhouse_scheduler import BehaviorInfo, GreenhouseScheduler
 
 import os
 from computer_vision import classify, measure, vision, color_correct, cv_utils
@@ -37,6 +37,10 @@ class ScheduleMonitor(Monitor):
         self.measurer = measure.MeasureHeight(self.ref_img, self.stick_mask)
 
         self.reset_behaviors_info()
+
+        # Create directory for new schedules
+        if not os.path.exists("./schedules"):
+            os.makedirs("./schedules")
     
     def get_most_recent_image(self):
         # Gets most recent image from saved images from camera behavior
@@ -69,7 +73,13 @@ class ScheduleMonitor(Monitor):
         self.plant_height = 0 if self.plant_height is None else self.plant_height
         print(f"New estimated plant height of {self.plant_height} cm and greenery of {self.greenery}%.")
         print("Estimated plant health is %s" %health_msg)
-        self.loggingMonitor.logPlantData({"greenery": self.greenery, "height": self.plant_height})
+        self.loggingMonitor.logPlantData(
+            {
+                "greenery": self.greenery,
+                "height": self.plant_height,
+                "message": health_msg
+            }
+        )
     
     def reset_behaviors_info(self):
         # Light should be on for at least 8 hours during the day (not on at night)
