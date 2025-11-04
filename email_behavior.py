@@ -120,6 +120,10 @@ class Email(Greenhouse_Behavior):
         self.plant_height = 0 if self.plant_height is None else self.plant_height
 
         return health_msg
+    
+    def get_previous_insolation(self):
+        lightMonitor = self.agent.getExecutiveLayer().getMonitor('LightMonitor')
+        return lightMonitor.getPrevInsolation()
 
     def create_email(self):
         import os
