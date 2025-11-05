@@ -11,6 +11,23 @@ class Email(Greenhouse_Behavior):
         super(Email, self).__init__(agent, "EmailBehavior")
 
         self.IMAGE_DIRECTORY = "/home/robotanist/User/images"
+        self.plant_height = None
+        self.greenery = None
+        self.agent = agent
+        # CV-related Initializations
+        stick_mask_path = "./computer_vision/masks/stick_mask_A.jpg"
+        ref_img_path = "./computer_vision/images/measure_ref_image_A.jpg"
+        self.foliage_model = "./computer_vision/foliage_classifier.pkl"
+        self.calib_model = "./computer_vision/calib_classifier.onnx"
+
+        self.ref_img = cv_utils.readImage(ref_img_path)
+        self.stick_mask = cv_utils.readMask(stick_mask_path)
+
+        self.classifier = classify.FoliageClassifier(self.foliage_model)
+        self.measurer = measure.MeasureHeight(self.ref_img, self.stick_mask)
+
+        self.greenery = self.height = 0
+
 
         # BEGIN STUDENT CODE
         self.initial = 'Halt'
@@ -31,20 +48,6 @@ class Email(Greenhouse_Behavior):
         self.fsm.add_transition('disable', self.sending_email, self.initial)
         self.fsm.add_transition('disable', self.on, self.initial)
         # END STUDENT CODE
-
-        # CV-related Initializations
-        stick_mask_path = "./computer_vision/masks/stick_mask_A.jpg"
-        ref_img_path = "./computer_vision/images/measure_ref_image_A.jpg"
-        self.foliage_model = "./computer_vision/foliage_classifier.pkl"
-        self.calib_model = "./computer_vision/calib_classifier.onnx"
-
-        self.ref_img = cv_utils.readImage(ref_img_path)
-        self.stick_mask = cv_utils.readMask(stick_mask_path)
-
-        self.classifier = classify.FoliageClassifier(self.foliage_model)
-        self.measurer = measure.MeasureHeight(self.ref_img, self.stick_mask)
-
-        self.greenery = self.height = 0
 
     def parse_sensor_data(self):
         sensors = self.sensors
@@ -84,8 +87,9 @@ class Email(Greenhouse_Behavior):
         import os
 
         img_paths = []
-        for entry in os.listdir(self.img_dir):
-            path = os.path.join(self.img_dir, entry)
+        print(self.IMAGE_DIRECTORY)
+        for entry in os.listdir(self.IMAGE_DIRECTORY):
+            path = os.path.join(self.IMAGE_DIRECTORY, entry)
             if os.path.isfile(path):
                 img_paths.append(path)
         if len(img_paths) == 0:
@@ -93,6 +97,7 @@ class Email(Greenhouse_Behavior):
         else:
             img_cdates = list(map(lambda p: os.path.getctime(p), img_paths))
             target_img_path = img_paths[img_cdates.index(max(img_cdates))]
+            print(target_img_path)
             return target_img_path
     
     def get_foliage_images(self):
@@ -105,7 +110,7 @@ class Email(Greenhouse_Behavior):
         corrected_image = corrector.correct(target_img)
 
         # Get foliage images
-        foliage_image, height_image, height = vision.foliageImages(corrected_image, self.classifer, self.measurer)
+        foliage_image, height_image, height = vision.foliageImages(corrected_image, self.classifier, self.measurer)
         return foliage_image, height_image
 
 
@@ -119,9 +124,18 @@ class Email(Greenhouse_Behavior):
         corrected_image = corrector.correct(target_img)
 
         # Estimate plant health
+        ignore_msg = False
+        if not self.greenery or self.plant_height:
+            ignore_msg = True
+
+        self.plant_height = 0 if not self.plant_height else self.plant_height
+        self.greenery = 0 if not self.greenery else self.greenery
+
         self.greenery, self.plant_height, health_msg = vision.plantHealth(
             corrected_image, self.classifier, self.measurer, self.greenery, self.plant_height)
-        self.plant_height = 0 if self.plant_height is None else self.plant_height
+
+        if ignore_msg:
+            return "This is the first health message! Nothing to do."
 
         return health_msg
     
@@ -149,44 +163,68 @@ class Email(Greenhouse_Behavior):
     def create_email(self):
         import os
         import datetime
+        from io import BytesIO
+        from PIL import Image
 
-        # IMAGE_DIRECTORY = "/home/robotanist/User/images"
         IMAGE_DIRECTORY = self.IMAGE_DIRECTORY
-
         TEAM_NAME = "Team Wendy's Baconhater"
         timestamp = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
         subject = f"{TEAM_NAME} TerraBot 7 Daily Mail"
         images = []
+
         mail_body = f"""
         <h2>{TEAM_NAME} - TerraBot 7</h2>
         <p><b>Time:</b> {timestamp}</p>
         <p>{self.parse_sensor_data()}</p>
+        <p>Previous Day's Insolation: {float(self.get_previous_insolation()):.2f}</p>
         <p>{self.parse_actuator_state()}</p>
-        <p>{self.get_plant_health_assessment()}</p>
-        <p><b>Previous Day's Insolation:</b>{self.get_previous_insolation()}</p>
+        <p>Health Message: {self.get_plant_health_assessment()}</p>
         """
 
         foliage_img, health_img = self.get_foliage_images()
-        if foliage_img:
-            with open(foliage_img, "rb") as f:
-                images.append(f.read())
-            mail_body = f"""
-            <p>Foliage Image:</p>
-            <p><img src="cid:image1" style="width:25%;height:auto;" /></p>
-            """
-        else:
-            print("Foliage image not found")
+        foliage_path = None
 
-        if health_img:
-            with open(health_img, "rb") as f:
+        try:
+            os.makedirs(IMAGE_DIRECTORY, exist_ok=True)
+
+            foliage_path = os.path.join(
+                IMAGE_DIRECTORY, f"foliage_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+            )
+
+            health_path = os.path.join(
+                IMAGE_DIRECTORY, f"health_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+            )
+
+            from PIL import Image
+            import numpy as np
+
+            foliage_img = Image.fromarray(foliage_img.astype(np.uint8))
+            foliage_img.save(foliage_path, format="JPG")
+
+            health_img = Image.fromarray(health_img.astype(np.uint8))
+            foliage_img.save(health_path, format="JPG")
+
+            with open(foliage_path, "rb") as f:
                 images.append(f.read())
-            mail_body = f"""
+
+            with open(health_path, "rb") as f:
+                images.append(f.read())
+
+            mail_body += f"""
             <p>Foliage Image:</p>
             <p><img src="cid:image1" style="width:25%;height:auto;" /></p>
+            <p>Health Image:</p>
+            <p><img src="cid:image2" style="width:25%;height:auto;" /></p>
             """
-        else:
-            print("Health image not found")
+
+        except Exception as e:
+            mail_body += f"""
+            <p><b>Error:</b> Ran into an error during foliage image parsing: {e}</p>
+            """
+
+        return subject, mail_body, images
+
 
         # if os.path.isdir(IMAGE_DIRECTORY):
         #     files = [os.path.join(IMAGE_DIRECTORY, f) for f in os.listdir(IMAGE_DIRECTORY)]
