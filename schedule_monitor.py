@@ -73,6 +73,7 @@ class ScheduleMonitor(Monitor):
         print(f"Health Message: {health_msg}")
         self.loggingMonitor.logPlantData(
             {
+                "day": self.day,
                 "greenery": self.greenery,
                 "height": self.plant_height,
                 "message": health_msg

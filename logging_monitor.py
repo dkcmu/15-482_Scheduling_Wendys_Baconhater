@@ -63,7 +63,7 @@ class LoggingMonitor(Monitor):
                 print(f"Created new log file: {file_name}\n")
         else:
             data = [
-                str(self.day),
+                str(data["day"]),
                 str(data["height"]),
                 str(data["greenery"]),
                 str(data["message"])
