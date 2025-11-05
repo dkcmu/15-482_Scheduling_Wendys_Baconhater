@@ -15,10 +15,10 @@ class Email(Greenhouse_Behavior):
         self.greenery = None
         self.agent = agent
         # CV-related Initializations
-        # stick_mask_path = "./computer_vision/masks/stick_mask_A.jpg"
-        # ref_img_path = "./computer_vision/images/measure_ref_image_A.jpg"
-        stick_mask_path = "./computer_vision/masks/stick_mask_sim.jpg"
-        ref_img_path = "./computer_vision/images/measure_ref_image_sim.jpg"
+        stick_mask_path = "./computer_vision/masks/stick_mask_A.jpg"
+        ref_img_path = "./computer_vision/images/measure_ref_image_A.jpg"
+        # stick_mask_path = "./computer_vision/masks/stick_mask_sim.jpg"
+        # ref_img_path = "./computer_vision/images/measure_ref_image_sim.jpg"
         self.foliage_model = "./computer_vision/foliage_classifier.pkl"
         self.calib_model = "./computer_vision/calib_classifier.onnx"
 
@@ -38,17 +38,17 @@ class Email(Greenhouse_Behavior):
         self.states = [self.initial, self.on, self.sending_email]
         self._sent_email = False
 
-        # self.receiver_emails = [
-        #     "chrissu@andrew.cmu.edu",
-        #     "dkouatch@andrew.cmu.edu",
-        #     "mliang4@andrew.cmu.edu",
-        #     "rsimmons@andrew.cmu.edu",
-        #     "shashwa3@andrew.cmu.edu",
-        #     "abhinanv@andrew.cmu.edu"
-        # ]
         self.receiver_emails = [
             "chrissu@andrew.cmu.edu",
+            "dkouatch@andrew.cmu.edu",
+            "mliang4@andrew.cmu.edu",
+            "rsimmons@andrew.cmu.edu",
+            "shashwa3@andrew.cmu.edu",
+            "abhinanv@andrew.cmu.edu"
         ]
+        """ self.receiver_emails = [
+            "chrissu@andrew.cmu.edu",
+        ] """
         self.prev_weight = 0
 
         self.fsm = Machine(self, states=self.states, initial=self.initial,
@@ -134,7 +134,7 @@ class Email(Greenhouse_Behavior):
 
         # Estimate plant health
         ignore_msg = False
-        if not self.greenery or self.plant_height:
+        if not self.greenery and not self.plant_height:
             ignore_msg = True
 
         self.plant_height = 0 if not self.plant_height else self.plant_height

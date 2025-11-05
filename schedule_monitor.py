@@ -20,10 +20,10 @@ class ScheduleMonitor(Monitor):
         self.day = 1
 
         # Files & Models for Plant Height Estimation
-        # stick_mask_path = "./computer_vision/masks/stick_mask_A.jpg"
-        # ref_img_path = "./computer_vision/images/measure_ref_image_A.jpg"
-        stick_mask_path = "./computer_vision/masks/stick_mask_sim.jpg"
-        ref_img_path = "./computer_vision/images/measure_ref_image_sim.jpg"
+        stick_mask_path = "./computer_vision/masks/stick_mask_A.jpg"
+        ref_img_path = "./computer_vision/images/measure_ref_image_A.jpg"
+        # stick_mask_path = "./computer_vision/masks/stick_mask_sim.jpg"
+        # ref_img_path = "./computer_vision/images/measure_ref_image_sim.jpg"
         self.foliage_model = "./computer_vision/foliage_classifier.pkl"
         self.calib_model = "./computer_vision/calib_classifier.onnx"
 
