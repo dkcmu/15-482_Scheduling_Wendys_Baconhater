@@ -124,6 +124,23 @@ class Email(Greenhouse_Behavior):
     def get_previous_insolation(self):
         lightMonitor = self.agent.getExecutiveLayer().getMonitor('LightMonitor')
         return lightMonitor.getPrevInsolation()
+    
+    def get_water_weight_info(self):
+        loggingMonitor = self.agent.getExecutiveLayer().getMonitor('LoggingMonitor')
+        total_water, contributed_weight, succ, fail_count = loggingMonitor.getWaterWeightData(self.time)
+        
+        watered_enough_count = fail_count[0]
+        reservoir_empty = fail_count[1]
+        smoist_enough_count  = fail_count[2]
+
+        return (
+            watered_enough_count,
+            reservoir_empty,
+            smoist_enough_count,
+            total_water,
+            contributed_weight,
+            succ
+        )
 
     def create_email(self):
         import os

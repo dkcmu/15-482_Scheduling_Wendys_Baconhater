@@ -1,7 +1,6 @@
 from monitor import *
 from terrabot_utils import clock_time, time_since_midnight
 import os
-import time
 
 class LoggingMonitor(Monitor):
 
@@ -20,6 +19,10 @@ class LoggingMonitor(Monitor):
         if not os.path.exists("./logs/"):
             os.makedirs("./logs/")
         # END STUDENT CODE
+
+        # Water & Weight data from past 24 hours:
+        self.recent_water_data = []
+        self.recent_water_attempts = []
     
     def reset(self):
         self.day += 1
@@ -75,6 +78,47 @@ class LoggingMonitor(Monitor):
                     file.write(",".join(data) + '\n')
             print("Logged new plant data")
     
+    def prune_water_data(self, time):
+        cutoff_time = time - (24*60*60) # 24 hours ago
+
+        # Cutoff Water & Weight data
+        while (len(self.recent_water_data) > 0
+               and self.recent_water_data[0][0] < cutoff_time):
+            self.recent_water_data = self.recent_water_data[1:]
+        
+        # Cutoff Water Attempts data
+        while (len(self.recent_water_attempts) > 0
+               and self.recent_water_attempts[0][0] < cutoff_time):
+            self.recent_water_attempts = self.recent_water_attempts[1:]
+    
+    def logWaterData(self, time, dwater):
+        self.recent_water_data.append((time, dwater))
+    
+    def logWaterAttempts(self, time, watered_enough, reservoir_empty, moist_enough):
+        self.recent_water_attempts.append((
+            time, (watered_enough, reservoir_empty, moist_enough)))
+    
+    def getWaterWeightData(self, time):
+        self.prune_water_data(time)
+
+        total_water = 0
+        contributed_weight = 0
+        succ = 0
+        fails = [0, 0, 0]
+
+        for (t, dwater) in self.recent_water_data:
+            total_water += dwater
+            if time - t < 1 and t >= 0: # Within the past hour
+                contributed_weight += ((1.0 / 4) ** t) * dwater
+        
+        for (t, tup) in self.recent_water_attempts:
+            if True not in tup:
+                succ += 1
+            fails[0] += int(tup[0])
+            fails[1] += int(tup[1])
+            fails[2] += int(tup[2])
+        return total_water, contributed_weight, succ, fails
+ 
     def perceive(self):
         # BEGIN STUDENT CODE
         self.normal_sensor_data = {sensor:self.sensordata[sensor] for sensor in self.normal_sensors}
