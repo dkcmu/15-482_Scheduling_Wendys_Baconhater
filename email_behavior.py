@@ -23,6 +23,7 @@ class Email(Greenhouse_Behavior):
             "shashwa3@andrew.cmu.edu",
             "abhinanv@andrew.cmu.edu"
         ]
+        self.prev_weight = 0
 
         self.fsm = Machine(self, states=self.states, initial=self.initial,
                             ignore_invalid_triggers=True)
@@ -35,12 +36,15 @@ class Email(Greenhouse_Behavior):
 
     def parse_sensor_data(self):
         sensors = self.sensors
+        weight = sensors.weight
         sensor_data = f"""
         <b>Sensor Data</b>\n
         <p>Light Level:       {sensors.light_level}</p>
         <p>Temperature:       {sensors.temperature}</p>
         <p>Humidity:          {sensors.humidity}</p>
-        <p>Weight:            {sensors.weight}</p>
+        <p>Previous Weight:   {self.prev_weight}</p>
+        <p>Weight:            {weight}</p>
+        <p>Weight Difference: {weight - self.prev_weight}</p>
         <p>Moisture:          {sensors.moisture}</p>
         <p>Water Level:       {sensors.wlevel}</p>
         <p>Light Level (raw): {sensors.light_level_raw[0]},{sensors.light_level_raw[1]}</p>
@@ -50,6 +54,7 @@ class Email(Greenhouse_Behavior):
         <p>Moisture (raw):    {sensors.moisture_raw[0]},{sensors.moisture_raw[1]}</p>
         <p>Water Level (raw): {sensors.wlevel_raw}</p>
         """
+        self.weight = weight
         return sensor_data
     
     def parse_actuator_state(self):
