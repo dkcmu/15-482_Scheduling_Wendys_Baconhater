@@ -15,8 +15,10 @@ class Email(Greenhouse_Behavior):
         self.greenery = None
         self.agent = agent
         # CV-related Initializations
-        stick_mask_path = "./computer_vision/masks/stick_mask_A.jpg"
-        ref_img_path = "./computer_vision/images/measure_ref_image_A.jpg"
+        # stick_mask_path = "./computer_vision/masks/stick_mask_A.jpg"
+        # ref_img_path = "./computer_vision/images/measure_ref_image_A.jpg"
+        stick_mask_path = "./computer_vision/masks/stick_mask_sim.jpg"
+        ref_img_path = "./computer_vision/images/measure_ref_image_sim.jpg"
         self.foliage_model = "./computer_vision/foliage_classifier.pkl"
         self.calib_model = "./computer_vision/calib_classifier.onnx"
 
@@ -96,7 +98,6 @@ class Email(Greenhouse_Behavior):
         import os
 
         img_paths = []
-        print(self.IMAGE_DIRECTORY)
         for entry in os.listdir(self.IMAGE_DIRECTORY):
             path = os.path.join(self.IMAGE_DIRECTORY, entry)
             if os.path.isfile(path):
@@ -106,7 +107,6 @@ class Email(Greenhouse_Behavior):
         else:
             img_cdates = list(map(lambda p: os.path.getctime(p), img_paths))
             target_img_path = img_paths[img_cdates.index(max(img_cdates))]
-            print(target_img_path)
             return target_img_path
     
     def get_foliage_images(self):

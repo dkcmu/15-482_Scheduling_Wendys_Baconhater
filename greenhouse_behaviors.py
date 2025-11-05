@@ -353,7 +353,7 @@ class RaiseSMoist(Greenhouse_Behavior):
         self.water_level = 0
         self.start_weight = 0
         self.last_time = 24*60*60 # Start with the prior day
-        self.daily_limit = 50 # 100
+        self.daily_limit = 80 # New default instead of 100
         self.wet = limits["moisture"][1]
 
         self.initial = 'Halt'
@@ -407,14 +407,17 @@ class RaiseSMoist(Greenhouse_Behavior):
         self.fsm.add_transition('doStep', 'done', 'init',
                                 conditions='is_next_day', after='resetTotalWater')
         # END STUDENT CODE
+
+        self.agent = agent
         
     def setInitial(self):
         pass
 
     def cant_water(self):
-        monitor = self.agent.getExecutiveLayer().getMonitor('LoggingMonitor')
-        monitor.logWaterAttempts(self.time, self.watered_enough(), self.reservoir_empty(), self.moist_enough())
-        return self.watered_enough() or self.reservoir_empty() or self.moist_enough()
+        w, r, m = self.watered_enough(), self.reservoir_empty(), self.moist_enough()
+        loggingMonitor = self.agent.getExecutiveLayer().getMonitor('LoggingMonitor')
+        loggingMonitor.logWaterAttempts(self.time, w, r, m)
+        return w or r or m
         
     def sliding_window(self, window, item, length=4):
         if (len(window) == length): window = window[1:]
@@ -467,14 +470,14 @@ class RaiseSMoist(Greenhouse_Behavior):
     def setLastTime(self):
         self.last_time = self.mtime
     def calcWaterAdded(self):
-        monitor = self.agent.getExecutiveLayer().getMonitor('LoggingMonitor')
         dwater = self.weight_est - self.start_weight # ml of water weighs a gram
         # Sometimes scales are off - cannot lose weight after watering
         dwater = max(0, dwater)
 
         self.total_water += dwater
 
-        monitor.logWaterData(self.time, self.dwater)
+        loggingMonitor = self.agent.getExecutiveLayer().getMonitor('LoggingMonitor')
+        loggingMonitor.logWaterData(self.time, dwater)
 
         print("calcWaterAdded: %.1f (%.1f = %.1f - %.1f)"
               %(self.total_water, dwater, self.weight_est, self.start_weight))
@@ -507,8 +510,8 @@ class RaiseSMoist(Greenhouse_Behavior):
                                   {"wpump": state}))
     
     def updateDailyLimit(self):
-        monitor = self.agent.getExecutiveLayer().getMonitor('ScheduleMonitor')
-        new_limit = monitor.getDailyWaterLimit()
+        scheduleMonitor = self.agent.getExecutiveLayer().getMonitor('ScheduleMonitor')
+        new_limit = scheduleMonitor.getDailyWaterLimit()
         print(f"Daily watering limit updated from {self.daily_limit} mL to {new_limit} mL.")
         self.daily_limit = new_limit
 
