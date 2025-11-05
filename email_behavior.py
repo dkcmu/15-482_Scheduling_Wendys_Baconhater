@@ -158,41 +158,59 @@ class Email(Greenhouse_Behavior):
 
         subject = f"{TEAM_NAME} TerraBot 7 Daily Mail"
         images = []
+        mail_body = f"""
+        <h2>{TEAM_NAME} - TerraBot 7</h2>
+        <p><b>Time:</b> {timestamp}</p>
+        <p>{self.parse_sensor_data()}</p>
+        <p>{self.parse_actuator_state()}</p>
+        <p>{self.get_plant_health_assessment()}</p>
+        <p><b>Previous Day's Insolation:</b>{self.get_previous_insolation()}</p>
+        """
 
-        if os.path.isdir(IMAGE_DIRECTORY):
-            files = [os.path.join(IMAGE_DIRECTORY, f) for f in os.listdir(IMAGE_DIRECTORY)]
-            files = [f for f in files if os.path.isfile(f)]
-            if files:
-                last_image = max(files, key=os.path.getmtime)
-                with open(last_image, "rb") as f:
-                    images.append(f.read())
-
-                body = f"""
-                <h2>{TEAM_NAME} - TerraBot 7</h2>
-                <p><b>Time:</b> {timestamp}</p>
-                <p>{self.parse_sensor_data()}</p>
-                <p>{self.parse_actuator_state()}</p>
-                <p>Most recent image:</p>
-                <p><img src="cid:image1" style="width:25%;height:auto;" /></p>
-                """
-            else:
-                body = f"""
-                <h2>{TEAM_NAME} - TerraBot 7</h2>
-                <p><b>Time:</b> {timestamp}</p>
-                <p>{self.parse_sensor_data()}</p>
-                <p>{self.parse_actuator_state()}</p>
-                <p>No image available.</p>
-                """
-        else:
-            body = f"""
-            <h2>{TEAM_NAME} - TerraBot 7</h2>
-            <p><b>Time:</b> {timestamp}</p>
-            <p>{self.parse_sensor_data()}</p>
-            <p>{self.parse_actuator_state()}</p>
-            <p>Image directory not found.</p>
+        foliage_img, health_img = self.get_foliage_images()
+        if foliage_img:
+            with open(foliage_img, "rb") as f:
+                images.append(f.read())
+            mail_body = f"""
+            <p>Foliage Image:</p>
+            <p><img src="cid:image1" style="width:25%;height:auto;" /></p>
             """
+        else:
+            print("Foliage image not found")
 
-        return subject, body, images
+        if health_img:
+            with open(health_img, "rb") as f:
+                images.append(f.read())
+            mail_body = f"""
+            <p>Foliage Image:</p>
+            <p><img src="cid:image1" style="width:25%;height:auto;" /></p>
+            """
+        else:
+            print("Health image not found")
+
+        # if os.path.isdir(IMAGE_DIRECTORY):
+        #     files = [os.path.join(IMAGE_DIRECTORY, f) for f in os.listdir(IMAGE_DIRECTORY)]
+        #     files = [f for f in files if os.path.isfile(f)]
+        #     if files:
+        #         last_image = max(files, key=os.path.getmtime)
+        #         with open(last_image, "rb") as f:
+        #             images.append(f.read())
+
+        #         mail_body = f"""
+        #         {mail_body}
+        #         <p>Most recent image:</p>
+        #         <p><img src="cid:image1" style="width:25%;height:auto;" /></p>
+        #         """
+        #     else:
+        #         mail_body = f"""
+        #         <p>No image available.</p>
+        #         """
+        # else:
+        #     mail_body = f"""
+        #     <p>Image directory not found.</p>
+        #     """
+
+        return subject, mail_body, images
 
 
     def email(self):
