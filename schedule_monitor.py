@@ -157,7 +157,7 @@ class ScheduleMonitor(Monitor):
             self.setLightHighFreqSchedule()
 
             print("Water Bucket: low freq, high limit")
-            self.setRaiseSmoistLowFreqSchedule()
+            self.setRaiseSmoistHighFreqSchedule()
             self.dailyWaterLimit = 100
         
         schedule_fname = f"./schedules/new_schedule_day_{self.day+1}.txt"
