@@ -9,14 +9,21 @@ class LightMonitor(Monitor):
 
     def __init__(self, period=100):
         super(LightMonitor, self).__init__("LightMonitor", period)
+        self.insolation = None
         self.reset()
 
     def reset(self):
-        self.prev_day_insolation = self.insolation
+        if self.insolation is None:
+            self.previous_insolation = 0
+        else:
+            self.previous_insolation = self.insolation
         self.insolation = 0
 
     def setTarget(self, target):
         self.target = target
+    
+    def getPrevInsolation(self):
+        return self.previous_insolation
 
     def read_log_file(self, filename):
         self.ambient_data = []

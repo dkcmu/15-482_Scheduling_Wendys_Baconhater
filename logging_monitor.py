@@ -1,7 +1,6 @@
 from monitor import *
 from terrabot_utils import clock_time, time_since_midnight
 import os
-import time
 
 class LoggingMonitor(Monitor):
 
@@ -20,6 +19,10 @@ class LoggingMonitor(Monitor):
         if not os.path.exists("./logs/"):
             os.makedirs("./logs/")
         # END STUDENT CODE
+
+        # Water & Weight data from past 24 hours:
+        self.recent_water_data = []
+        self.recent_water_attempts = []
     
     def reset(self):
         self.day += 1
@@ -38,18 +41,18 @@ class LoggingMonitor(Monitor):
             if not os.path.exists(file_name):
                 with open(file_name, "w") as file:
                     file.write(",".join(headings) + '\n')
-                print(f"Created new log file: {file_name}")
+                print(f"Created new log file: {file_name}\n")
         else:
             if not os.path.exists(file_name): # NEW DAY
                 with open(file_name, "w") as file:
                     file.write(",".join(headings) + '\n')
                     file.write(",".join(data) + '\n')
-                print(f"Created new log file: {file_name}")
+                print(f"Created new log file: {file_name}\n")
             else: # SAME DAY
                 with open(file_name, "a") as file:
                     file.write(",".join(data) + '\n')
     
-    def logPlantData(self, data=None):
+    def logPlantData(self, data=None): # EXTERNALLY ACCESSED
         headings = ["Day", "Plant Height", "Greenery", "Message"]
         file_name = f"./logs/plants.csv"
 
@@ -57,10 +60,10 @@ class LoggingMonitor(Monitor):
             if not os.path.exists(file_name):
                 with open(file_name, "w") as file:
                     file.write(",".join(headings) + '\n')
-                print(f"Created new log file: {file_name}")
+                print(f"Created new log file: {file_name}\n")
         else:
             data = [
-                str(self.day),
+                str(data["day"]),
                 str(data["height"]),
                 str(data["greenery"]),
                 str(data["message"])
@@ -73,8 +76,76 @@ class LoggingMonitor(Monitor):
             else:
                 with open(file_name, "a") as file:
                     file.write(",".join(data) + '\n')
-            print("Logged new plant data")
+            print(f"Logged new plant data\n")
     
+    def prune_water_data(self, time):
+        cutoff_time = time - (24*60*60) # 24 hours ago
+
+        # Cutoff Water & Weight data
+        while (len(self.recent_water_data) > 0
+               and self.recent_water_data[0][0] < cutoff_time):
+            self.recent_water_data = self.recent_water_data[1:]
+        
+        # Cutoff Water Attempts data
+        while (len(self.recent_water_attempts) > 0
+               and self.recent_water_attempts[0][0] < cutoff_time):
+            self.recent_water_attempts = self.recent_water_attempts[1:]
+    
+    def logWaterData(self, time, dwater): # EXTERNALLY ACCESSED
+        log_string = f"Day {self.day}: +{dwater} mL\n"
+        print(log_string)
+        self.recent_water_data.append((time, dwater))
+    
+    def logWaterAttempts( # EXTERNALLY ACCESSED
+            self,
+            time,
+            watered_enough,
+            reservoir_empty,
+            moist_enough):
+        log_string = (
+            f"Day {self.day}: attempted watering\n"
+            f"- Water Limit: {watered_enough}\n"
+            f"- Reservoir Empty: {reservoir_empty}\n"
+            f"- Soil Too Moist: {moist_enough}\n"
+        )
+        print(log_string)
+        self.recent_water_attempts.append((
+            time, (watered_enough, reservoir_empty, moist_enough)))
+    
+    def getWaterWeightData(self, time):
+        self.prune_water_data(time)
+
+        total_water = 0
+        contributed_weight = 0
+        succ = 0
+        fails = [0, 0, 0]
+        tries = len(self.recent_water_attempts)
+
+        for (t, dwater) in self.recent_water_data:
+            total_water += dwater
+            if time - t < 1 and t >= 0: # Within the past hour
+                contributed_weight += ((1.0 / 4) ** t) * dwater
+        
+        for (t, tup) in self.recent_water_attempts:
+            if True not in tup:
+                succ += 1
+            fails[0] += int(tup[0])
+            fails[1] += int(tup[1])
+            fails[2] += int(tup[2])
+        
+        log_string = (
+            f"24 Hour Water & Weight Summary ({clock_time(time)}):\n"
+            f"- {total_water} mL added\n"
+            f"- Estimated contribution of {contributed_weight} g\n"
+            f"- {succ}/{tries} successful attempts\n"
+            f"- {fails[0]}/{tries} watered enough\n"
+            f"- {fails[1]}/{tries} reservoir empty\n"
+            f"- {fails[2]}/{tries} soil too moist\n"
+        )
+        print(log_string)
+
+        return total_water, contributed_weight, succ, fails, tries
+ 
     def perceive(self):
         # BEGIN STUDENT CODE
         self.normal_sensor_data = {sensor:self.sensordata[sensor] for sensor in self.normal_sensors}
