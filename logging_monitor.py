@@ -105,6 +105,7 @@ class LoggingMonitor(Monitor):
         contributed_weight = 0
         succ = 0
         fails = [0, 0, 0]
+        tries = len(self.recent_water_attempts)
 
         for (t, dwater) in self.recent_water_data:
             total_water += dwater
@@ -117,7 +118,7 @@ class LoggingMonitor(Monitor):
             fails[0] += int(tup[0])
             fails[1] += int(tup[1])
             fails[2] += int(tup[2])
-        return total_water, contributed_weight, succ, fails
+        return total_water, contributed_weight, succ, fails, tries
  
     def perceive(self):
         # BEGIN STUDENT CODE
