@@ -201,10 +201,10 @@ class Email(Greenhouse_Behavior):
             import numpy as np
 
             foliage_img = Image.fromarray(foliage_img.astype(np.uint8))
-            foliage_img.save(foliage_path, format="JPG")
+            foliage_img.save(foliage_path, format="JPEG")
 
             health_img = Image.fromarray(health_img.astype(np.uint8))
-            foliage_img.save(health_path, format="JPG")
+            health_img.save(health_path, format="JPEG")
 
             with open(foliage_path, "rb") as f:
                 images.append(f.read())
@@ -223,6 +223,18 @@ class Email(Greenhouse_Behavior):
             mail_body += f"""
             <p><b>Error:</b> Ran into an error during foliage image parsing: {e}</p>
             """
+
+        watered_enough_count,reservoir_empty_count,smoist_enough_count,total_water,contributed_weight,succ,tries = self.get_water_weight_info()
+
+        mail_body += f"""
+        <b>Water Information in Past 24 Hours</b>
+        <p>Successfully watered {succ} out of {tries} attempts.</p>
+        <p>Greenhouse was watered enough {watered_enough_count} out of {tries} attempts.</p>
+        <p>Reservoir was emptied in {reservoir_empty_count} out of {tries} attempts.</p>
+        <p>Soil moisture was moist enough in {smoist_enough_count} out of {tries} attempts.</p>
+        <p>Added {total_water} mL of water. </p>
+        <p>The estimated contribution of water to weight is {contributed_weight} grams.</p>
+        """
 
         return subject, mail_body, images
 
