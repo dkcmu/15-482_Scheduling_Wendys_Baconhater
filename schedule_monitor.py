@@ -102,7 +102,7 @@ class ScheduleMonitor(Monitor):
         self.behaviors_info["Light"] = BehaviorInfo(8*60, 0, 0, 4*60)
     
     def setLightHighFreqSchedule(self):
-        self.behaviors_info["Light"] = BehaviorInfo(12*60, 0, 0, 4*60)
+        self.behaviors_info["Light"] = BehaviorInfo(10*60, 0, 0, 4*60)
     
     def setRaiseSmoistLowFreqSchedule(self):
         self.behaviors_info["RaiseMoist"] = BehaviorInfo(2*60, 12*60, 2*60, 4*60)
