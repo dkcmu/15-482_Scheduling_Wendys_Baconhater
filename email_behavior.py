@@ -35,6 +35,15 @@ class Email(Greenhouse_Behavior):
         self.on = "init"
         self.states = [self.initial, self.on, self.sending_email]
         self._sent_email = False
+
+        # self.receiver_emails = [
+        #     "chrissu@andrew.cmu.edu",
+        #     "dkouatch@andrew.cmu.edu",
+        #     "mliang4@andrew.cmu.edu",
+        #     "rsimmons@andrew.cmu.edu",
+        #     "shashwa3@andrew.cmu.edu",
+        #     "abhinanv@andrew.cmu.edu"
+        # ]
         self.receiver_emails = [
             "chrissu@andrew.cmu.edu",
         ]
