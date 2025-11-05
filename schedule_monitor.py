@@ -107,8 +107,11 @@ class ScheduleMonitor(Monitor):
     def setRaiseSmoistLowFreqSchedule(self):
         self.behaviors_info["RaiseMoist"] = BehaviorInfo(2*60, 12*60, 2*60, 4*60)
     
-    def setRaiseSmoistHighFreqSchedule(self):
+    def setRaiseSmoistMedFreqSchedule(self):
         self.behaviors_info["RaiseMoist"] = BehaviorInfo(3*60, 12*60, 2*60, 4*60)
+    
+    def setRaiseSmoistHighFreqSchedule(self):
+        self.behaviors_info["RaiseMoist"] = BehaviorInfo(4*60, 12*60, 2*60, 4*60)
     
     def getDailyWaterLimit(self): # Accessed by RaiseSoilMoisture Behavior
         return self.dailyWaterLimit
@@ -148,7 +151,7 @@ class ScheduleMonitor(Monitor):
             self.setLightHighFreqSchedule()
 
             print("Water Bucket: high freq, high limit")
-            self.setRaiseSmoistHighFreqSchedule()
+            self.setRaiseSmoistMedFreqSchedule()
             self.dailyWaterLimit = 100
         else:
             print("Estimated Stage: Mature")
