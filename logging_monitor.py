@@ -50,7 +50,7 @@ class LoggingMonitor(Monitor):
                     file.write(",".join(data) + '\n')
     
     def logPlantData(self, data=None):
-        headings = ["Day", "Plant Height", "Greenery"]
+        headings = ["Day", "Plant Height", "Greenery", "Message"]
         file_name = f"./logs/plants.csv"
 
         if data is None: # MONITOR __INIT__
@@ -59,7 +59,12 @@ class LoggingMonitor(Monitor):
                     file.write(",".join(headings) + '\n')
                 print(f"Created new log file: {file_name}")
         else:
-            data = [str(self.day), str(data["height"]), str(data["greenery"])]
+            data = [
+                str(self.day),
+                str(data["height"]),
+                str(data["greenery"]),
+                str(data["message"])
+            ]
             if not os.path.exists(file_name):
                 with open(file_name, "w") as file:
                     file.write(",".join(headings) + '\n')
