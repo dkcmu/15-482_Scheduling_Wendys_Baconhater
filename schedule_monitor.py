@@ -94,6 +94,11 @@ class ScheduleMonitor(Monitor):
         self.behaviors_info["RaiseMoist"] = BehaviorInfo(2*60, 12*60, 2*60, 4*60)
         # camera should not be on at all at night
         self.behaviors_info["TakeImage"] =  BehaviorInfo(1*60, 0,     3*60, 6*60)
+
+        self.lightMonitor.setTarget(self.base_insolation_target)
+        self.setLightLowFreqSchedule()
+        self.setRaiseSmoistLowFreqSchedule()
+        self.dailyWaterLimit = 60
     
     def setLightLowFreqSchedule(self):
         self.behaviors_info["Light"] = BehaviorInfo(8*60, 0, 0, 4*60)
@@ -106,6 +111,9 @@ class ScheduleMonitor(Monitor):
     
     def setRaiseSmoistHighFreqSchedule(self):
         self.behaviors_info["RaiseMoist"] = BehaviorInfo(3*60, 12*60, 2*60, 4*60)
+    
+    def dailyWaterLimit(self): # Accessed by RaiseSoilMoisture Behavior
+        return self.dailyWaterLimit
 
     def activate(self):
         self.lightMonitor = self.getExecutive().getMonitor("LightMonitor")
@@ -139,10 +147,13 @@ class ScheduleMonitor(Monitor):
         # WATER
         if self.plant_height < self.seedling_height_threshold:
             self.setRaiseSmoistLowFreqSchedule()
+            self.dailyWaterLimit = 60
         elif self.plant_height < self.mature_height_threshold:
             self.setRaiseSmoistLowFreqSchedule()
+            self.dailyWaterLimit = 80
         else:
             self.setRaiseSmoistHighFreqSchedule()
+            self.dailyWaterLimit = 100
         
         schedule_fname = f"./schedules/new_schedule_day_{self.day}.txt"
         problem = GreenhouseScheduler(self.behaviors_info, 30, schedule_fname)

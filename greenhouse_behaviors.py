@@ -353,7 +353,7 @@ class RaiseSMoist(Greenhouse_Behavior):
         self.water_level = 0
         self.start_weight = 0
         self.last_time = 24*60*60 # Start with the prior day
-        self.daily_limit = 100
+        self.daily_limit = 50 # 100
         self.wet = limits["moisture"][1]
 
         self.initial = 'Halt'
@@ -380,7 +380,8 @@ class RaiseSMoist(Greenhouse_Behavior):
 
         # init -> _
         self.fsm.add_transition('doStep', 'init', 'init',
-                                conditions='is_next_day', after='resetTotalWater')
+                                conditions='is_next_day',
+                                after=['resetTotalWater', 'updateDailyLimit'])
         self.fsm.add_transition('doStep', 'init', 'waiting', conditions='time_up')
 
         # waiting -> _
@@ -504,6 +505,12 @@ class RaiseSMoist(Greenhouse_Behavior):
     def setPump(self,state):
         self.actuators.doActions((self.name, self.sensors.getTime(),
                                   {"wpump": state}))
+    
+    def updateDailyLimit(self):
+        monitor = self.agent.getExecutiveLayer().getMonitor('ScheduleMonitor')
+        new_limit = monitor.getDailyWaterLimit()
+        print(f"Daily watering limit updated from {self.daily_limit} mL to {new_limit} mL.")
+        self.daily_limit = new_limit
 
 """
 Soil moisture below the upper limit
