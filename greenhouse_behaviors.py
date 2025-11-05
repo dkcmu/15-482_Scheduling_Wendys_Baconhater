@@ -385,7 +385,7 @@ class RaiseSMoist(Greenhouse_Behavior):
 
         # waiting -> _
         self.fsm.add_transition('doStep', 'waiting', 'watering',
-                                unless=['watered_enough', 'reservoir_empty', 'moist_enough'],
+                                unless=['cant_water'],
                                 after=['setTimer10', 'startWatering'])
         self.fsm.add_transition('doStep', 'waiting', 'done',
                                 conditions='watered_enough', after='startDone')
@@ -409,6 +409,11 @@ class RaiseSMoist(Greenhouse_Behavior):
         
     def setInitial(self):
         pass
+
+    def cant_water(self):
+        monitor = self.agent.getExecutiveLayer().getMonitor('LoggingMonitor')
+        monitor.logWaterAttempts(self.time, self.watered_enough(), self.reservoir_empty(), self.moist_enough())
+        return self.watered_enough() or self.reservoir_empty() or self.moist_enough()
         
     def sliding_window(self, window, item, length=4):
         if (len(window) == length): window = window[1:]
@@ -461,11 +466,15 @@ class RaiseSMoist(Greenhouse_Behavior):
     def setLastTime(self):
         self.last_time = self.mtime
     def calcWaterAdded(self):
+        monitor = self.agent.getExecutiveLayer().getMonitor('LoggingMonitor')
         dwater = self.weight_est - self.start_weight # ml of water weighs a gram
         # Sometimes scales are off - cannot lose weight after watering
         dwater = max(0, dwater)
 
         self.total_water += dwater
+
+        monitor.logWaterData(self.time, self.dwater)
+
         print("calcWaterAdded: %.1f (%.1f = %.1f - %.1f)"
               %(self.total_water, dwater, self.weight_est, self.start_weight))
 
