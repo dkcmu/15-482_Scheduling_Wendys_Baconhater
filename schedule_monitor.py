@@ -101,8 +101,11 @@ class ScheduleMonitor(Monitor):
     def setLightLowFreqSchedule(self):
         self.behaviors_info["Light"] = BehaviorInfo(8*60, 0, 0, 4*60)
     
-    def setLightHighFreqSchedule(self):
+    def setLightMedFreqSchedule(self):
         self.behaviors_info["Light"] = BehaviorInfo(10*60, 0, 0, 4*60)
+    
+    def setLightHighFreqSchedule(self):
+        self.behaviors_info["Light"] = BehaviorInfo(12*60, 0, 0, 4*60)
     
     def setRaiseSmoistLowFreqSchedule(self):
         self.behaviors_info["RaiseMoist"] = BehaviorInfo(2*60, 12*60, 2*60, 4*60)
@@ -148,7 +151,7 @@ class ScheduleMonitor(Monitor):
 
             print("Light Bucket: high freq, med insolation")
             self.lightMonitor.setTarget(self.seedling_insolation_target)
-            self.setLightHighFreqSchedule()
+            self.setLightMedFreqSchedule()
 
             print("Water Bucket: high freq, high limit")
             self.setRaiseSmoistMedFreqSchedule()
