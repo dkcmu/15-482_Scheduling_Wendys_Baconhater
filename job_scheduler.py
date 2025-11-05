@@ -155,6 +155,7 @@ class JobScheduler():
         for job in self.jobs:
             for task in job.tasks:
                 # BEGIN STUDENT CODE
+                model.Add(sum([v for k, v in self.scheduleds.items() if k[0] == job.name and k[1] == task.name]) <= 1)
                 # END STUDENT CODE
                 pass
 
@@ -164,6 +165,7 @@ class JobScheduler():
         model = self.model
         for machine in self.machines:
             # BEGIN STUDENT CODE
+            model.AddNoOverlap([v for k, v in self.intervals.items() if k[2] == machine.name])
             # END STUDENT CODE
             pass
 
@@ -175,6 +177,14 @@ class JobScheduler():
         model = self.model
         for job in self.jobs:
             # BEGIN STUDENT CODE
+            for i in range(len(job.tasks) - 1):
+                task1 = job.tasks[i]
+                task2 = job.tasks[i+1]
+                for task_machine1 in task1.task_machines:
+                    for task_machine2 in task2.task_machines:
+                        key1 = self._key(job, task1, task_machine1.machine)
+                        key2 = self._key(job, task2, task_machine2.machine)
+                        model.add(self.intervals[key1].EndExpr() <= self.intervals[key2].StartExpr()).OnlyEnforceIf(self.scheduleds[key1], self.scheduleds[key2])
             # END STUDENT CODE
             pass
 
@@ -187,6 +197,11 @@ class JobScheduler():
         model = self.model
         for job in self.jobs:
             # BEGIN STUDENT CODE
+            foo = model.NewBoolVar('foo')
+            scheds = [v for k, v in self.scheduleds.items() if k[0] == job.name]
+            model.Add(sum(scheds) > 0).OnlyEnforceIf(foo)
+            model.Add(sum(scheds) <= 0).OnlyEnforceIf(foo.Not())
+            model.Add(sum(scheds) == len(job.tasks)).OnlyEnforceIf(foo)
             # END STUDENT CODE
             pass
 
@@ -197,6 +212,20 @@ class JobScheduler():
     def create_tools_constraints(self):
         model = self.model
         # BEGIN STUDENT CODE
+        for tool in self.tools:
+            times = []
+            demands = []
+            actives = []
+            for task in self.tasks:
+                if tool in task.tools:
+                    count = task.tools.count(tool)
+                    starts = [v for k, v in self.starts.items() if k[1] == task.name]
+                    ends = [v for k, v in self.ends.items() if k[1] == task.name]
+                    scheds = [v for k, v in self.scheduleds.items() if k[1] == task.name]
+                    times += starts + ends
+                    demands += [count] * len(scheds) + [-count] * len(scheds)
+                    actives += scheds + scheds
+            model.AddReservoirConstraintWithActive(times, demands, actives, 0, tool.num)
         # END STUDENT CODE
         pass
 
@@ -209,6 +238,27 @@ class JobScheduler():
     def create_parts_constraints(self):
         model = self.model
         # BEGIN STUDENT CODE
+        for part in self.parts:
+            times = []
+            demands = []
+            actives = []
+            for task in self.tasks:
+                if part in task.parts:
+                    count = task.parts.count(part)
+                    starts = [v for k, v in self.starts.items() if k[1] == task.name]
+                    scheds = [v for k, v in self.scheduleds.items() if k[1] == task.name]
+                    times += starts
+                    demands += [count] * len(scheds)
+                    actives += scheds
+
+                if self.isPartsTask(task) and task.produced_part == part:
+                    ends = [v for k, v in self.ends.items() if k[1] == task.name]
+                    scheds = [v for k, v in self.scheduleds.items() if k[1] == task.name]
+                    times += ends
+                    demands += [-task.quantity] * len(ends)
+                    actives += scheds
+
+            model.AddReservoirConstraintWithActive(times, demands, actives, 0, part.quantity)
         # END STUDENT CODE
         pass
 
@@ -231,6 +281,18 @@ class JobScheduler():
     def add_costs(self):
         model = self.model
         # BEGIN STUDENT CODE
+        for task in self.tasks:
+            for tm in task.task_machines:
+                scheds = [v for k, v in self.scheduleds.items() if k[2] == tm.machine.name and k[1] == task.name]
+                for s in scheds:
+                    self.cost += tm.duration * tm.machine.energy_cost * s
+
+        for task in self.tasks:
+            scheds = [v for k, v in self.scheduleds.items() if k[1] == task.name]
+            for s in scheds:
+                for p in task.parts:
+                    self.cost += p.cost * s
+
         # END STUDENT CODE
 
     def add_optimization(self, add_costs):
