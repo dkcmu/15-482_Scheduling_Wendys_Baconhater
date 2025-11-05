@@ -166,7 +166,7 @@ class ScheduleMonitor(Monitor):
         
         schedule_fname = f"./schedules/new_schedule_day_{self.day+1}.txt"
         problem = GreenhouseScheduler(self.behaviors_info, 30, schedule_fname)
-        VISUALIZE_SCHEDULE = True
+        VISUALIZE_SCHEDULE = False
         
         if problem.solveProblem(visualize=VISUALIZE_SCHEDULE) is None:
             print(f"FAILURE: could not create new schedule for day {self.day+1}. Resetting behaviors...\n")
