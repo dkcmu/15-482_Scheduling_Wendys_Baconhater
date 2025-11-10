@@ -15,8 +15,8 @@ class Email(Greenhouse_Behavior):
         self.greenery = None
         self.agent = agent
         # CV-related Initializations
-        stick_mask_path = "./computer_vision/masks/stick_mask_A.jpg"
-        ref_img_path = "./computer_vision/images/measure_ref_image_A.jpg"
+        stick_mask_path = "./computer_vision/masks/stick_mask_B.jpg"
+        ref_img_path = "./computer_vision/images/measure_ref_image_B.jpg"
         # stick_mask_path = "./computer_vision/masks/stick_mask_sim.jpg"
         # ref_img_path = "./computer_vision/images/measure_ref_image_sim.jpg"
         self.foliage_model = "./computer_vision/foliage_classifier.pkl"
@@ -28,7 +28,7 @@ class Email(Greenhouse_Behavior):
         self.classifier = classify.FoliageClassifier(self.foliage_model)
         self.measurer = measure.MeasureHeight(self.ref_img, self.stick_mask)
 
-        self.greenery = self.height = 0
+        self.greenery = self.height = None
 
 
         # BEGIN STUDENT CODE
@@ -136,14 +136,18 @@ class Email(Greenhouse_Behavior):
 
         # Estimate plant health
         ignore_msg = False
-        if not self.greenery and not self.plant_height:
+        if self.greenery is None and self.plant_height is None:
             ignore_msg = True
 
-        self.plant_height = 0 if not self.plant_height else self.plant_height
-        self.greenery = 0 if not self.greenery else self.greenery
+        self.plant_height = 0 if self.plant_height is None else self.plant_height
+        self.greenery = 0 if self.greenery is None else self.greenery
 
         self.greenery, self.plant_height, health_msg = vision.plantHealth(
             corrected_image, self.classifier, self.measurer, self.greenery, self.plant_height)
+        
+        # plantHealth() could set these to None still
+        self.plant_height = 0 if self.plant_height is None else self.plant_height
+        self.greenery = 0 if self.greenery is None else self.greenery
 
         if ignore_msg:
             return "This is the first health message! Nothing to do."
