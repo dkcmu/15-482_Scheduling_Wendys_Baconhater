@@ -192,8 +192,10 @@ class Email(Greenhouse_Behavior):
         <p>Health Message: {self.get_plant_health_assessment()}</p>
         """
 
-        foliage_img, health_img = self.get_foliage_images()
+        foliage_img, height_img = self.get_foliage_images()
         foliage_path = None
+
+        last_img_path = self.get_most_recent_image()
 
         try:
             os.makedirs(IMAGE_DIRECTORY, exist_ok=True)
@@ -202,7 +204,7 @@ class Email(Greenhouse_Behavior):
                 IMAGE_DIRECTORY, f"foliage_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
             )
 
-            health_path = os.path.join(
+            height_path = os.path.join(
                 IMAGE_DIRECTORY, f"health_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
             )
 
@@ -212,20 +214,25 @@ class Email(Greenhouse_Behavior):
             foliage_img = Image.fromarray(foliage_img.astype(np.uint8))
             foliage_img.save(foliage_path, format="JPEG")
 
-            health_img = Image.fromarray(health_img.astype(np.uint8))
-            health_img.save(health_path, format="JPEG")
+            height_img = Image.fromarray(height_img.astype(np.uint8))
+            height_img.save(height_path, format="JPEG")
 
             with open(foliage_path, "rb") as f:
                 images.append(f.read())
 
-            with open(health_path, "rb") as f:
+            with open(height_path, "rb") as f:
+                images.append(f.read())
+
+            with open(last_img_path, "rb") as f:
                 images.append(f.read())
 
             mail_body += f"""
             <p>Foliage Image:</p>
             <p><img src="cid:image1" style="width:25%;height:auto;" /></p>
-            <p>Health Image:</p>
+            <p>Height Image:</p>
             <p><img src="cid:image2" style="width:25%;height:auto;" /></p>
+            <p>Most Recent Image:</p>
+            <p><img src="cid:image3" style="width:25%;height:auto;" /></p>
             """
 
         except Exception as e:
