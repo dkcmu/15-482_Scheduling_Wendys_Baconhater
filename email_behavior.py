@@ -103,10 +103,12 @@ class Email(Greenhouse_Behavior):
             if os.path.isfile(path):
                 img_paths.append(path)
         if len(img_paths) == 0:
+            print("(EMAIL) ERROR: Could not find recent image.")
             return None
         else:
             img_cdates = list(map(lambda p: os.path.getctime(p), img_paths))
             target_img_path = img_paths[img_cdates.index(max(img_cdates))]
+            print(f"(EMAIL) SUCCESS: most recent found at {target_img_path}")
             return target_img_path
     
     def get_foliage_images(self):
